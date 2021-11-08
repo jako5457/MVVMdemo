@@ -7,7 +7,9 @@
 // Det er dog ikke nogen god løsning! Så er det godt at vi har Messages!
 
 using MVVM.Models;
+using System;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 using Xamarin.Forms;
 
 namespace MVVM.ViewModels
@@ -25,36 +27,6 @@ namespace MVVM.ViewModels
                     new Person { Name = "Christian", Age = 32 },
                     new Person { Name = "Helle", Age = 54 }
                 };
-
-            ClearEntriesCommand = new Command(() => ExecuteClearEntriesCommand());  // 1. Command with explicit method
-
-            MakeOlderCommand = new Command(                                         // 2. Command with inline methods
-                execute: () =>
-                {
-                    Age++;
-                    _personSelectedItem.Age = Age;
-                    RefreshCanExecutes();
-                },
-                canExecute: () =>
-                {
-                    return _personSelectedItem != null;
-                });
-
-            AddCommand = new Command(                                               // 2. Command with inline methods
-               execute: () => Persons.Add(new Person { Name = Name, Age = Age }),
-               canExecute: () =>
-               {
-                   return Name?.Length > 0 && Age > 0;
-               });
-
-            ShowAgeCommand = new Command(
-                execute: () => Application.Current.MainPage.DisplayAlert("AgeButtonClicked", $"{PersonSelectedItem.Name} er {PersonSelectedItem.Age}", "OK"),
-                canExecute: () => _personSelectedItem != null
-                );
-
-            AnswerToLife = new Command<string>(                                     // 5. Command med parameter
-                execute: (string param) => Application.Current.MainPage.DisplayAlert("AnswerToLifeClicked", $"{param}", "OK")
-                );
         }
         #endregion
 
@@ -90,41 +62,65 @@ namespace MVVM.ViewModels
         #endregion
 
         #region COMMANDING
-        // Properties for implementing commands in constructor.
-        public Command ClearEntriesCommand { get; private set; }
-        public Command MakeOlderCommand { get; private set; }
-        public Command AddCommand { get; private set; }
-        public Command AnswerToLife { get; private set; }
+        // 1. Command with explicit Execute method
+        private Command clearEntriesCommand;
+        public Command ClearEntriesCommand => clearEntriesCommand ??= new Command(ExecuteClearEntries);
 
-
-        public Command ShowAgeCommand { get; private set; }
-
-        void ExecuteClearEntriesCommand()                                            // 1. Explicit method for Command
+        private void ExecuteClearEntries()
         {
             Name = string.Empty;
             Age = 0;
         }
 
+        // 2. Command with explicit Execute and CanExecute methods
+        private Command addCommand;
+        public Command AddCommand => addCommand ??= new Command(ExecuteAddCommand, CanExecuteAddCommand);
 
-        private Command _onDeleteCommand;                                            // 3. Command with local Property implementation
-        public Command DeleteCommand => _onDeleteCommand ??= new Command
-            (
-                execute: () =>
-                {
-                    Persons.Remove(_personSelectedItem ?? null);
-                },
-                canExecute: () =>
-                {
-                    return _personSelectedItem != null && Persons.Count > 1;
-                }
+        private void ExecuteAddCommand(object obj)
+        {
+            Persons.Add(new Person { Name = Name, Age = Age });
+        }
+
+        private bool CanExecuteAddCommand(object arg)
+        {
+            return Name?.Length > 0 && Age > 0;
+        }
+
+
+        // 3. Commands with inline methods
+        private Command showAgeCommand;
+        public Command ShowAgeCommand => showAgeCommand ??= new Command(
+            execute: () => Application.Current.MainPage.DisplayAlert("AgeButtonClicked", $"{PersonSelectedItem.Name} er {PersonSelectedItem.Age}", "OK"),
+            canExecute: () => _personSelectedItem != null
             );
 
-        void RefreshCanExecutes()                                                   // 4. Update of CanExecute()
-        {
-            DeleteCommand.ChangeCanExecute();
-            MakeOlderCommand.ChangeCanExecute();
+
+        private Command makeOlderCommand;
+        public Command MakeOlderCommand => makeOlderCommand ??= new Command(
+            execute: () =>
+            {
+                Age++;
+                _personSelectedItem.Age = Age;
+                RefreshCanExecutes();
+            },
+            canExecute: () => _personSelectedItem != null
+            );
+
+
+        // 4. Command med parameter
+        private Command answerToLifeCommand;
+        public Command AnswerToLifeCommand => answerToLifeCommand ?? new Command<string>
+            (
+                execute: (string param) => Application.Current.MainPage.DisplayAlert("AnswerToLifeClicked", $"{param}", "OK")
+            );
+
+
+        // 5. Update of CanExecute()
+        void RefreshCanExecutes()                                                   
+        {       
             AddCommand.ChangeCanExecute();
             ShowAgeCommand.ChangeCanExecute();
+            MakeOlderCommand.ChangeCanExecute();
         }
         #endregion
     }
