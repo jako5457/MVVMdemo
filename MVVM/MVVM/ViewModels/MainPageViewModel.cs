@@ -1,15 +1,12 @@
 ﻿// Her er tilføjet Commanding Properties, som der bindes til
-// i View'et. Bemærk at DeleteCommand er lavet med en anonymous 
-// metode, hvorimod alle de andre er lavet med en normal metode.
+// i View'et.
 // Der er dog et problem med ShowAgeCommand, som skal åbne en 
 // DisplayAlert i View'et - men det kan ikke umiddelbart virke.
 // Her er lavet en "hård" afhængighed ved at benytte Application.Current.MainPage.DisplayAlert()..
 // Det er dog ikke nogen god løsning! Så er det godt at vi har Messages!
 
 using MVVM.Models;
-using System;
 using System.Collections.ObjectModel;
-using System.Windows.Input;
 using Xamarin.Forms;
 
 namespace MVVM.ViewModels
@@ -61,7 +58,7 @@ namespace MVVM.ViewModels
         }
         #endregion
 
-        #region COMMANDING
+        #region COMMANDs
         // 1. Command with explicit Execute method
         private Command clearEntriesCommand;
         public Command ClearEntriesCommand => clearEntriesCommand ??= new Command(ExecuteClearEntries);
@@ -107,7 +104,7 @@ namespace MVVM.ViewModels
             );
 
 
-        // 4. Command med parameter
+        // 4. Command with parameter
         private Command answerToLifeCommand;
         public Command AnswerToLifeCommand => answerToLifeCommand ?? new Command<string>
             (
@@ -116,8 +113,8 @@ namespace MVVM.ViewModels
 
 
         // 5. Update of CanExecute()
-        void RefreshCanExecutes()                                                   
-        {       
+        void RefreshCanExecutes()
+        {
             AddCommand.ChangeCanExecute();
             ShowAgeCommand.ChangeCanExecute();
             MakeOlderCommand.ChangeCanExecute();
