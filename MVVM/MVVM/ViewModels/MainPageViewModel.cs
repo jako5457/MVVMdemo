@@ -8,6 +8,7 @@ using MVVM.Models;
 using MVVM.Services;
 using System.Collections.ObjectModel;
 using Xamarin.Forms;
+using TinyIoC;
 
 namespace MVVM.ViewModels
 {
@@ -22,7 +23,7 @@ namespace MVVM.ViewModels
         {
             Persons = new ObservableCollection<Person>();
 
-            _personService = DependencyService.Get<IPersonService>();
+            _personService = TinyIoCContainer.Current.Resolve<IPersonService>();
 
             MakeOlderCommand = new Command(
                 execute: () =>

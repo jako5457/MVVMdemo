@@ -1,5 +1,6 @@
 ﻿using MVVM.Services;
 using Xamarin.Forms;
+using TinyIoC;
 
 namespace MVVM
 {
@@ -9,7 +10,8 @@ namespace MVVM
         {
             InitializeComponent();
 
-            DependencyService.RegisterSingleton<IPersonService>(new PersonService());
+            var container = TinyIoCContainer.Current;
+            container.Register<IPersonService, PersonService>();
 
             MainPage = new MainPage();
         }
