@@ -5,6 +5,7 @@
 // uden og med en parameter.
 
 using MVVM.Models;
+using MVVM.Services;
 using System.Collections.ObjectModel;
 using Xamarin.Forms;
 
@@ -12,19 +13,16 @@ namespace MVVM.ViewModels
 {
     public class MainPageViewModel : ViewModelBase
     {
-        public ObservableCollection<Person> Persons { get; }
+        public ObservableCollection<Person> Persons { get; private set; }
 
+        private readonly IPersonService _personService;
 
         #region CONSTRUCTOR
         public MainPageViewModel()
         {
-            Persons = new ObservableCollection<Person>
-                {
-                    new Person { Name = "Anna", Age = 27 },
-                    new Person { Name = "Christian", Age = 32 },
-                    new Person { Name = "Helle", Age = 54 }
-                };
+            Persons = new ObservableCollection<Person>();
 
+            _personService = DependencyService.Get<IPersonService>();
 
             MakeOlderCommand = new Command(
                 execute: () =>
@@ -46,7 +44,10 @@ namespace MVVM.ViewModels
                });
 
             AddCommand = new Command(
-               execute: () => Persons.Add(new Person { Name = Name, Age = Age }),
+               execute: () => {
+                   _personService.CreatePerson(new Person { Name = Name, Age = Age });
+                   UpdateEntries();
+               },
                canExecute: () =>
                {
                    return Name?.Length > 0 && Age > 0;
@@ -60,21 +61,26 @@ namespace MVVM.ViewModels
             AnswerToLife = new Command<string>(
                 execute: (string param) => MessagingCenter.Send(this, "AnswerToLifeClicked", param)
                 );
+
+            UpdateEntries();
         }
         #endregion
 
         #region PROPERTY CHANGE NOTIFICATION
-        Person _personSelectedItem;
+        Person _personSelectedItem = new Person();
         public Person PersonSelectedItem
         {
             get { return _personSelectedItem; }
             set
             {
-                if (SetProperty(ref _personSelectedItem, value))
+                if (value != null)
                 {
-                    Name = value.Name;
-                    Age = value.Age;
-                    RefreshCanExecutes();
+                    if (SetProperty(ref _personSelectedItem, value))
+                    {
+                        Name = value.Name;
+                        Age = value.Age;
+                        RefreshCanExecutes();
+                    }
                 }
             }
         }
@@ -116,11 +122,12 @@ namespace MVVM.ViewModels
                 return _onDeleteCommand ?? (_onDeleteCommand = new Command(
                     execute: () =>
                     {
-                        Persons.Remove(_personSelectedItem ?? null);
+                        _personService.DeletePerson(_personSelectedItem ?? null);
+                        UpdateEntries();
                     },
                     canExecute: () =>
                     {
-                        return _personSelectedItem != null && Persons.Count > 1;
+                        return _personSelectedItem != null && _personService.GetPeople().Count > 1;
                     }
                     ));
             }
@@ -134,5 +141,13 @@ namespace MVVM.ViewModels
             ShowAgeCommand.ChangeCanExecute();
         }
         #endregion
+
+        public void UpdateEntries()
+        {
+            _personSelectedItem = new Person();
+            Persons = new ObservableCollection<Person>(_personService.GetPeople());
+
+            OnPropertyChanged(nameof(Persons));
+        }
     }
 }

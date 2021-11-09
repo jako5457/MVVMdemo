@@ -1,4 +1,5 @@
-﻿using Xamarin.Forms;
+﻿using MVVM.Services;
+using Xamarin.Forms;
 
 namespace MVVM
 {
@@ -7,6 +8,8 @@ namespace MVVM
         public App()
         {
             InitializeComponent();
+
+            DependencyService.RegisterSingleton<IPersonService>(new PersonService());
 
             MainPage = new MainPage();
         }

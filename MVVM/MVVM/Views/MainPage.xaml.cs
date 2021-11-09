@@ -15,7 +15,6 @@ namespace MVVM
             {
                 DisplayAlert("Age", $"{arg.Name} er {arg.Age} år!", "OK");
             });
-               });
 
             MessagingCenter.Subscribe<MainPageViewModel, string>(new MainPageViewModel(),
                "AnswerToLifeClicked", (sender, arg) =>
